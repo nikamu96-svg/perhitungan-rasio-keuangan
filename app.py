@@ -70,12 +70,13 @@ if st.button("Hitung Rasio dan Analisis AI"):
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
-            messages=[
-                {"role": "system", "content": "Kamu adalah analis keuangan profesional."},
-                {"role": "user", "content": prompt}
-            ]
-        )
+    model="llama-3.3-70b-versatile",   # MODEL BARU & AKTIF
+    messages=[
+        {"role": "system", "content": "Kamu adalah analis keuangan profesional."},
+        {"role": "user", "content": prompt}
+    ]
+)
+
 
         ai_output = response.choices[0].message["content"]
 
