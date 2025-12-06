@@ -1,79 +1,86 @@
 import streamlit as st
 from groq import Groq
-from dotenv import load_dotenv
-import os
 
-# Load .env file
-load_dotenv()
+# ==========================
+# KONFIGURASI API KEY
+# ==========================
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "")
 
-# Ambil API Key
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+client = Groq(api_key=GROQ_API_KEY)
 
-# Judul Aplikasi
-st.title("📊 Aplikasi AI Perhitungan Rasio Keuangan")
-st.write("Hitung rasio keuangan dan dapatkan analisis otomatis dari AI.")
+# ==========================
+# TITLE APLIKASI
+# ==========================
+st.title("📊 AI Perhitungan Rasio Keuangan Mahasiswa")
 
-# =======================
-# INPUT DATA KEUANGAN
-# =======================
-st.subheader("Input Data")
+st.write("Masukkan data laporan keuangan, lalu AI akan menghitung rasio dan memberikan analisis otomatis.")
 
-aset_lancar = st.number_input("Aset Lancar", min_value=0.0)
-kewajiban_lancar = st.number_input("Kewajiban Lancar", min_value=0.0)
-total_hutang = st.number_input("Total Hutang", min_value=0.0)
-total_aset = st.number_input("Total Aset", min_value=0.0)
-laba_bersih = st.number_input("Laba Bersih", min_value=0.0)
-ekuitas = st.number_input("Ekuitas", min_value=0.0)
+# ==========================
+# INPUT DATA
+# ==========================
+st.header("Input Data Keuangan")
 
-# =======================
-# LOGIKA HITUNG RASIO
-# =======================
-if st.button("Hitung Rasio"):
+try:
+    aset_lancar = float(st.number_input("Aset Lancar", min_value=0.0))
+    kewajiban_lancar = float(st.number_input("Kewajiban Lancar", min_value=0.0))
+    laba_bersih = float(st.number_input("Laba Bersih", min_value=0.0))
+    penjualan = float(st.number_input("Penjualan", min_value=0.0))
+    total_aset = float(st.number_input("Total Aset", min_value=0.0))
+except:
+    st.error("Pastikan semua input berupa angka.")
+    st.stop()
 
-    current_ratio = aset_lancar / kewajiban_lancar if kewajiban_lancar > 0 else 0
-    debt_asset_ratio = total_hutang / total_aset if total_aset > 0 else 0
-    roe = laba_bersih / ekuitas if ekuitas > 0 else 0
+if st.button("Hitung Rasio dan Analisis AI"):
+    
+    # ==========================
+    # PERHITUNGAN RASIO
+    # ==========================
+    try:
+        current_ratio = aset_lancar / kewajiban_lancar if kewajiban_lancar != 0 else 0
+        net_profit_margin = laba_bersih / penjualan if penjualan != 0 else 0
+        roa = laba_bersih / total_aset if total_aset != 0 else 0
+    except:
+        st.error("Terjadi kesalahan dalam perhitungan.")
+        st.stop()
 
-    hasil = {
-        "Current Ratio": current_ratio,
-        "Debt to Asset Ratio": debt_asset_ratio,
-        "Return on Equity (ROE)": roe
-    }
+    # Tampilkan hasil perhitungan
+    st.subheader("📘 Hasil Perhitungan Rasio")
+    st.write(f"**Current Ratio:** {current_ratio:.2f}")
+    st.write(f"**Net Profit Margin:** {net_profit_margin:.2f}")
+    st.write(f"**Return on Assets (ROA):** {roa:.2f}")
 
-    # Tampilkan hasil rasio
-    st.subheader("📌 Hasil Perhitungan")
-    for nama, nilai in hasil.items():
-        st.write(f"**{nama} :** {nilai:.2f}")
-
-    # =======================
-    # BUAT PROMPT UNTUK AI
-    # =======================
+    # ==========================
+    # PANGGIL AI UNTUK ANALISIS
+    # ==========================
     prompt = f"""
-    Analisis rasio keuangan berikut:
+    Berikut adalah rasio keuangan yang telah dihitung:
 
-    - Current Ratio: {current_ratio:.2f}
-    - Debt to Asset Ratio: {debt_asset_ratio:.2f}
-    - Return on Equity (ROE): {roe:.2f}
+    Current Ratio: {current_ratio:.2f}
+    Net Profit Margin: {net_profit_margin:.2f}
+    ROA: {roa:.2f}
 
-    Berikan:
-    1. Penjelasan arti masing-masing rasio
-    2. Interpretasi kondisi keuangan
-    3. Rekomendasi perbaikan
+    Tolong berikan analisis lengkap dan mudah dipahami mengenai:
+    - Kesehatan likuiditas perusahaan
+    - Efisiensi operasional
+    - Kemampuan menghasilkan laba
+    - Saran perbaikan berdasarkan angka di atas
+
+    Jelaskan dengan gaya yang ringkas namun jelas.
     """
 
-    # =======================
-    # PANGGIL GROQ AI (MODEL BARU)
-    # =======================
-    response = client.chat.completions.create(
-        model="llama-3.1-70b-versatile",     # MODEL BARU & PALING STABIL
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.1-70b-versatile",
+            messages=[
+                {"role": "system", "content": "Kamu adalah analis keuangan profesional."},
+                {"role": "user", "content": prompt}
+            ]
+        )
 
-    # Ambil hasil AI
-    ai_reply = response.choices[0].message.content
+        ai_output = response.choices[0].message["content"]
 
-    # Tampilkan analisis
-    st.subheader("🤖 Analisis AI")
-    st.write(ai_reply)
+        st.subheader("🤖 Analisis AI")
+        st.write(ai_output)
+
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat memanggil AI: {e}")
