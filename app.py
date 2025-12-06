@@ -3,18 +3,20 @@ from groq import Groq
 from dotenv import load_dotenv
 import os
 
-# Load .env
+# Load .env file
 load_dotenv()
 
-# Load API Key
+# Ambil API Key
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # Judul Aplikasi
 st.title("📊 Aplikasi AI Perhitungan Rasio Keuangan")
-st.write("Masukkan data untuk menghitung rasio keuangan secara otomatis dan mendapatkan analisis AI.")
+st.write("Hitung rasio keuangan dan dapatkan analisis otomatis dari AI.")
 
-# Input Data
-st.subheader("Input Data Keuangan")
+# =======================
+# INPUT DATA KEUANGAN
+# =======================
+st.subheader("Input Data")
 
 aset_lancar = st.number_input("Aset Lancar", min_value=0.0)
 kewajiban_lancar = st.number_input("Kewajiban Lancar", min_value=0.0)
@@ -23,9 +25,11 @@ total_aset = st.number_input("Total Aset", min_value=0.0)
 laba_bersih = st.number_input("Laba Bersih", min_value=0.0)
 ekuitas = st.number_input("Ekuitas", min_value=0.0)
 
+# =======================
+# LOGIKA HITUNG RASIO
+# =======================
 if st.button("Hitung Rasio"):
-    
-    # Menghindari pembagian 0
+
     current_ratio = aset_lancar / kewajiban_lancar if kewajiban_lancar > 0 else 0
     debt_asset_ratio = total_hutang / total_aset if total_aset > 0 else 0
     roe = laba_bersih / ekuitas if ekuitas > 0 else 0
@@ -37,11 +41,13 @@ if st.button("Hitung Rasio"):
     }
 
     # Tampilkan hasil rasio
-    st.subheader("📌 Hasil Perhitungan Rasio Keuangan")
+    st.subheader("📌 Hasil Perhitungan")
     for nama, nilai in hasil.items():
         st.write(f"**{nama} :** {nilai:.2f}")
 
-    # Buat prompt untuk AI
+    # =======================
+    # BUAT PROMPT UNTUK AI
+    # =======================
     prompt = f"""
     Analisis rasio keuangan berikut:
 
@@ -49,12 +55,17 @@ if st.button("Hitung Rasio"):
     - Debt to Asset Ratio: {debt_asset_ratio:.2f}
     - Return on Equity (ROE): {roe:.2f}
 
-    Berikan penjelasan dengan bahasa yang mudah dipahami, interpretasi kesehatan keuangan, dan rekomendasi.
+    Berikan:
+    1. Penjelasan arti masing-masing rasio
+    2. Interpretasi kondisi keuangan
+    3. Rekomendasi perbaikan
     """
 
-    # Panggil AI Groq (format terbaru)
+    # =======================
+    # PANGGIL GROQ AI (MODEL BARU)
+    # =======================
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama-3.1-70b-versatile",     # MODEL BARU & PALING STABIL
         messages=[
             {"role": "user", "content": prompt}
         ]
@@ -63,5 +74,6 @@ if st.button("Hitung Rasio"):
     # Ambil hasil AI
     ai_reply = response.choices[0].message.content
 
+    # Tampilkan analisis
     st.subheader("🤖 Analisis AI")
     st.write(ai_reply)
