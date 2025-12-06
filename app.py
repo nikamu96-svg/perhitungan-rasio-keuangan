@@ -68,15 +68,17 @@ if st.button("Hitung Rasio dan Analisis AI"):
     Jelaskan dengan gaya yang ringkas namun jelas.
     """
 
-    try:
-        response = client.chat.completions.create(
-    model="llama-3.3-70b-versatile",   # MODEL BARU & AKTIF
+   response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
     messages=[
-        {"role": "system", "content": "Kamu adalah analis keuangan profesional."},
+        {"role": "system", "content": "Kamu analis keuangan profesional."},
         {"role": "user", "content": prompt}
     ]
 )
 
+# Ambil hasil dengan cara yang benar
+hasil = response.choices[0].message.content
+st.write(hasil)
 
         ai_output = response.choices[0].message["content"]
 
